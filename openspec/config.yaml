@@ -1,0 +1,129 @@
+schema: spec-driven
+
+context: |
+  Product: Yingo, an iOS and Android app that coaches French employees out of debt,
+  gamified as a mountain expedition, guided by Cabri (a mountain goat mascot).
+  Target: French employees aged 22-45, 1,800-3,200 EUR net/month, several debts,
+  not over-indebted. Personas: Ines, Karim, Sandrine (see docs/descriptif.md).
+  Principle: the app analyzes, prepares and suggests; the user decides and acts.
+
+  Reference documents (written in French):
+  - docs/prd.md: SOURCE OF TRUTH for the MVP (scope, requirements, engine rules,
+    milestones). When it conflicts with the project description, the PRD wins.
+  - docs/descriptif.md: context, personas, action catalog, data model, camps,
+    quests, badges, sample letters and call scripts.
+  - docs/decisions.md: decision log (D-001...). It refines the PRD and WINS over
+    it on any conflict. Read it before every proposal.
+  - docs/brand.md: palette, fonts, Cabri's tone of voice. Its screens are drafts:
+    never copy their layouts.
+  Every proposal cites the requirement IDs it covers (ONB-xx, DET-xx, PLN-xx,
+  ACT-xx, ECA-xx, GAM-xx, NOT-xx, SUB-xx, PRO-xx, SEC-xx) and the decisions
+  (D-xxx) it relies on.
+
+  Key decisions (details in docs/decisions.md):
+  - D-001 Hybrid engines: one pure TS package (packages/engine) usable from the
+    app and from Deno Edge Functions. The app recomputes the plan live and
+    offline; a server job generates and stores the weekly plan every Monday in
+    the user's time zone and sends a personalized push. Only the server writes
+    weekly plans (idempotent, one per user per ISO week, engine version stored).
+  - D-002 Offline is read-only: cached reads, writes require the network.
+  - D-003 Survival mode and referral alert stay free after subscription expiry.
+  - D-004 Re-proposal by status: postponed next week, not possible after 4 weeks,
+    done never (one-off) or after 4 weeks (recurring).
+  - D-005 MVP rewards are badges and celebrations only; the data model allows
+    attaching concrete rewards in V2 (verifiable milestones only).
+  - D-006 SEC-01 app lock (biometrics or PIN) and SEC-02 JSON data export are P0.
+
+  Languages:
+  - Code, identifiers, comments, commits, OpenSpec artifacts and change names: English.
+  - User-facing copy: French only, informal "tu", no financial jargon.
+    All UI strings live in locale files (fr.json), never hard-coded, so the app
+    can be translated later.
+
+  Domain glossary (French term -> English identifier, use these consistently):
+  - dette -> debt; creancier -> creditor; solde restant -> balance
+  - mensualite / minimum -> minimumPayment; taux annuel -> annualRate
+  - revenus (R) -> income; charges fixes (C) -> fixedCharges
+  - vie courante essentielle (V) -> essentialLiving
+  - reste a vivre -> disposableIncome (R - C - M)
+  - capacite de remboursement (CR) -> repaymentCapacity
+  - droit a l'ecart (E) -> leeway; accelerateur (A) -> accelerator
+  - boule de neige -> snowball; avalanche -> avalanche
+  - date de liberation -> freedomDate
+  - plan de la semaine -> weeklyPlan; action -> action; catalogue -> actionCatalog
+  - audit express -> quickAudit
+  - mode survie -> survivalMode; alerte de bascule -> referralAlert
+  - arriere (loyer, energie, impots, amende) -> arrears
+  - decouvert -> overdraft; paiement fractionne -> installmentPayment (BNPL)
+  - dette envers un proche -> personalLoan
+  - camp -> camp (baseCamp, refuge, pass, summit); quete -> quest; badge -> badge
+  - guide -> Cabri (component name: Cabri)
+
+  Team: 1 solo developer (the founder), MVP shipped in 12 weeks.
+  No peer review: quality relies on tests, strict TypeScript and a strict scope.
+  Anything that is not P0 may slip after launch.
+
+  Stack:
+  - Mobile: React Native + Expo (development builds, EAS Build and Submit),
+    Expo Router, Zustand, strict TypeScript
+  - 3D map: native React Three Fiber (@react-three/fiber/native, expo-gl), low-poly,
+    scenery from simple shapes or CC0 models; fall back to a 2D map below 30 fps
+  - Cabri: react-native-svg + Reanimated (4 states: idle, talking, celebrating, calm),
+    behind a stable component interface so it can move to Rive later
+  - Backend: Supabase EU region (PostgreSQL, anonymous/Apple/Google/email auth,
+    Edge Functions in TypeScript, scheduled jobs)
+  - Subscriptions: RevenueCat + in-app purchases, webhook to an Edge Function
+  - Notifications: Expo Notifications (push from the server for the weekly plan,
+    local for payment reminders)
+  - Monitoring: Sentry, PostHog EU (never send amounts or creditor names)
+  - Plan engine and action engine: pure, deterministic TypeScript modules with no
+    dependency on React or Supabase, runnable offline
+
+  Architecture rules (to keep a future Go migration easy):
+  - SQL migrations versioned in the repo (Supabase CLI)
+  - No business logic in PL/pgSQL; logic lives in code
+  - RLS enabled on every table; every table has a user_id
+  - Small, single-purpose Edge Functions
+  - The app goes through a single data-access layer
+  - Amounts stored as integer cents, dates in UTC
+  - The subscriptions table is written only by the RevenueCat webhook
+
+  Non-negotiable product rules:
+  - Progress is shown as percentages and actions, never as compared amounts
+  - No leaderboards, full anonymity, no free-text messaging
+  - Cabri never blames; a missed week becomes "on repart lundi"
+  - No randomness, no in-game purchases
+  - Debts are never shown in red; red is reserved for real alerts
+  - Housing, energy, taxes, then credit minimums are always paid first
+  - Any value computed from a default is labeled as an estimate
+
+  Legal constraints (lawyer review pending):
+  - The app never contacts a creditor, holds no mandate, never negotiates for the
+    user (French Consumer Code art. L.322-1); flat access price, never results-based
+  - No recommendation of credit, debt consolidation or named financial products
+  - Letters and scripts: no promise of results, always remind the user acts alone
+  - GDPR: EU hosting, consent, one-tap data export and account deletion
+
+  Out of MVP scope (V2): open banking (PSD2), overdraft alerts, emergency fund,
+  AI personalization, anonymous rope team and collective counters, avatar
+  customization, richer 3D, B2B2C, solidarity pricing, concrete rewards
+  (vouchers, gift cards, partner offers).
+
+rules:
+  proposal:
+    - Cite the PRD requirement IDs covered and the milestone week (S1 to S12)
+    - List explicitly what is out of scope for this change
+    - Flag anything touching legal constraints or non-negotiable rules
+  specs:
+    - Write requirements with SHALL and scenarios with WHEN/THEN
+    - Include at least one edge case (0% debt, unknown field, negative repayment capacity)
+    - Reuse the PRD calculation rules as written; flag gaps instead of inventing rules
+    - Use the domain glossary identifiers
+  design:
+    - State where the logic lives (pure engine, app, Edge Function, database) and why
+    - Every new table comes with its SQL migration and RLS policies
+    - Describe offline behavior
+  tasks:
+    - Each task takes less than half a day
+    - Plan and action engines are covered by unit tests before any UI work
+    - End with a manual check on the reference Android device
