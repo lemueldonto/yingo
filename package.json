@@ -1,0 +1,31 @@
+{
+  "name": "yingo",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "eslint . && node scripts/check-shared-packages.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "deno:check": "deno check packages/engine/src/index.ts packages/i18n/src/index.ts",
+    "db:types": "supabase gen types typescript --local --schema public > apps/mobile/src/data/database.types.ts"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@eslint/js": "^10",
+    "deno": "^2",
+    "eslint": "^10",
+    "eslint-config-prettier": "^10",
+    "eslint-plugin-i18next": "^6",
+    "eslint-plugin-import-x": "^4",
+    "globals": "^17",
+    "prettier": "^3",
+    "supabase": "^2",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8"
+  }
+}

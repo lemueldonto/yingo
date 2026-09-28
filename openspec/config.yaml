@@ -126,4 +126,4 @@ rules:
   tasks:
     - Each task takes less than half a day
     - Plan and action engines are covered by unit tests before any UI work
-    - End with a manual check on the reference Android device
+    - End with a manual check on the Android test device and the iPhone (D-007)

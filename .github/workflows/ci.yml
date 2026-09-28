@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, types, tests, Deno
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      # Shared packages and the Edge Function must type-check under Deno (D-001).
+      - run: pnpm deno:check
+      - run: pnpm exec deno check --config supabase/functions/engine-version/deno.json supabase/functions/engine-version/index.ts
+
+  database:
+    name: Migrations, RLS tests, generated types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Only the database and auth are needed to apply migrations and run pgTAP.
+      - run: pnpm exec supabase start -x realtime,storage-api,imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
+      - run: pnpm exec supabase db reset
+      - run: pnpm exec supabase test db
+      - name: Generated types match the migrations
+        run: |
+          pnpm db:types
+          git diff --exit-code apps/mobile/src/data/database.types.ts

@@ -110,3 +110,24 @@ New PRD requirements:
 | SEC-02 | Export of all personal data as a JSON file from the settings (GDPR right to data portability). | P0 |
 
 SEC-01 fits in `account-and-gdpr`; SEC-02 too.
+
+---
+
+## D-007 — No reference device; 3D performance guaranteed by a fallback
+
+**Context.** The PRD ties the S1 exit criterion and the 3D performance requirement
+to an entry-level "reference Android". No such phone will be bought.
+
+**Decision.**
+- There is no reference device model. Manual checks at the end of each change run
+  on the founder's own Android phone and iPhone, through the EAS development client.
+- "Works on every supported Android" rests on three rules instead of one device:
+  functional checks on the test devices, the Expo SDK's default minimum Android
+  version, and a runtime frame-rate guard that switches to the 2D map automatically
+  on slow phones.
+- How to validate low-end performance without owning a low-end phone (remote real
+  devices or a borrowed phone), and the rewording of the S1 exit criterion, belong
+  to the `3d-map-spike` change.
+
+**PRD update.** Wherever the PRD says "reference Android", read "Android test
+device" for functional checks; performance is covered by the runtime fallback.

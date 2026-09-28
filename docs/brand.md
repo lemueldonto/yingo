@@ -23,6 +23,20 @@ La planche HTML reste la référence visuelle ; ce fichier est celui que l'agent
 Règle : les dettes ne sont **jamais en rouge**. Le rouge est réservé aux alertes
 réelles (échéance du lendemain, mode survie) et ne fait pas partie de la palette de marque.
 
+| Nom | Hex | Usage |
+| --- | --- | --- |
+| Alerte | `#D02A1E` | Alertes réelles uniquement, jamais une dette (contraste 4,8:1 sur Nuage) |
+
+## Contrastes (WCAG AA)
+
+- Texte courant : au moins 4,5:1 avec son fond. Les paires autorisées sont listées
+  dans `apps/mobile/src/theme/tokens.ts` et vérifiées par un test.
+- **Soleil, Lagon et Goyave ne servent jamais de couleur de texte sur fond clair**
+  (environ 1,5:1 et 2:1 sur Nuage). Ils s'utilisent en aplat, avec un texte Encre
+  par-dessus.
+- Texte secondaire : Encre atténuée `#5A5980` (6,1:1 sur Nuage).
+- Texte sur Myrtille ou sur Alerte : blanc.
+
 ## Typographie
 
 - Titres : **Fredoka**
